@@ -34,13 +34,11 @@ export function newToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
-export async function authParticipant(req: Request) {
+export async function authParticipant(req: Request): Promise<any | null> {
   const auth = req.headers.get('authorization') || '';
   const token = auth.replace(/^Bearer\s+/i, '').trim();
 
-  if (!token) {
-    return { error: 'Missing bearer token', status: 401, participant: null };
-  }
+  if (!token) return null;
 
   const hashed = sha256(token);
   const { data, error } = await db
@@ -49,9 +47,7 @@ export async function authParticipant(req: Request) {
     .eq('token_hash', hashed)
     .single();
 
-  if (error || !data) {
-    return { error: 'Invalid or revoked token', status: 401, participant: null };
-  }
+  if (error || !data) return null;
 
-  return { error: null, status: 200, participant: data };
+  return data;
 }
